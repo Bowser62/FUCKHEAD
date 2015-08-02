@@ -1,8 +1,10 @@
+# FUCKHEAD v1.0.1-alpha
+
 from sys import *
 
 tokens = []
 num_stack=[]
-print("FUCKHEAD v1.0.0-alpha")
+print("FUCKHEAD v1.0.1-alpha")
 
 def open_file(filename):
     data = open(filename, "r").read()

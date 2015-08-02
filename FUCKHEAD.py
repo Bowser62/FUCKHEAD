@@ -1,10 +1,11 @@
-# FUCKHEAD v1.0.1-alpha
+# FUCKHEAD v1.1.0-alpha
 
 from sys import *
 
 tokens = []
 num_stack=[]
-print("FUCKHEAD v1.0.1-alpha")
+symbols = {}
+print("FUCKHEAD v1.1.0-alpha")
 
 def open_file(filename):
     data = open(filename, "r").read()
@@ -18,6 +19,8 @@ def lex(filecontents):
     isexpr=0
     expr = ""
     n = ""
+    var_started = 0
+    var = ""
     filecontents = list(filecontents)
     for char in filecontents:
         tok += char
@@ -30,12 +33,32 @@ def lex(filecontents):
             if expr != "" and isexpr == 1:
                 tokens.append("EXPR:" + expr)
                 expr = ""
-            elif expr != ""and isexpr == 0:
+            elif expr != "" and isexpr == 0:
                 tokens.append("NUM:" + expr)
                 expr = ""
+            elif var != "":
+                var = var[:-1]
+                tokens.append("VAR:" + var)
+                var = ""
+                var_started = 0
             tok = ""
-        elif tok =="LISTEN SHITFACE":
+        elif tok == "LISTEN SHITFACE":
             tokens.append("PRINT")
+            tok = ""
+        elif tok == "FUCKING" and state == 0:
+            tok = ""
+            var_started = 1
+            var += tok
+        elif tok == "IS" and state == 0:
+            if var != "":
+                var = var[:-1]
+                tokens.append("VAR:" + var)
+                var = ""
+                var_started = 0
+            tokens.append("EQUALS")
+            tok = ""
+        elif var_started == 1 and tok is not char in "IS FUCKING":
+            var += tok
             tok = ""
         elif tok == "0" or tok == "1" or tok =="2" or tok =="3" or tok =="4" or tok =="5" or tok =="6" or tok =="7" or tok =="8" or tok =="9":
             expr += tok
@@ -55,31 +78,11 @@ def lex(filecontents):
         elif state == 1:
             string += tok
             tok = ""
-    return tokens
     #print(tokens)
+    return tokens
 
 def evalExpression(expr):
-    expr = "," + expr
-
-    i = len(expr)-1
-    num = ""
-    while i >= 0:
-        if expr[i] == "+" or expr[i] == "-" or expr[i] == "/" or expr[i] == "*" or expr[i] == "%":
-            num = num[::-1]
-            num_stack.append(num)
-            num_stack.append(expr[i])
-            num = ""
-        elif expr[i] == ",":
-            num = num[::-1]
-            num_stack.append(num)
-            num = ""
-        else:
-            num += expr[i]
-        i-=1
-    print(num_stack)
-
-
-
+    return eval(expr)
 
 def doPrint(toPrint):
     if(toPrint[0:6] == "STRING"):
@@ -89,6 +92,9 @@ def doPrint(toPrint):
     if(toPrint[0:4] == "EXPR"):
         toPrint = evalExpression(toPrint[5:])
     print(toPrint)
+
+def doAssign(varname, varvalue):
+    symbols[varname[4:]] = varvalue
 
 def parse(toks):
     i = 0
@@ -101,6 +107,10 @@ def parse(toks):
             elif toks[i+1][0:4] == "EXPR":
                 doPrint(toks[i+1])
             i+=2
+        if toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "VAR EQUALS STRING":
+            doAssign(toks[i], toks[i+2])
+            i+=3
+        print(symbols)
 
 def run():
     data = open_file(argv[1])
